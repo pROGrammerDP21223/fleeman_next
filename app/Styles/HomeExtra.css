@@ -1,0 +1,175 @@
+.services {
+    padding: 80px 0 56px;
+}
+
+.section {
+    position: relative;
+    padding: 80px 0;
+}
+
+
+.services .service-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.section-heading {
+    text-align: center;
+    margin: 0 0 40px;
+}
+
+.section-heading h2 {
+    position: relative;
+    font-weight: 700;
+    margin: 0 0 30px;
+}
+h2 {
+    font-weight: 900;
+    font-size: 36px;
+    color: #111111;
+}
+
+.section-heading h2:after {
+    content: "";
+    position: absolute;
+    background-image: url(https://dreamsrent.dreamstechnologies.com/html/template/assets/img/bg/title-head.png);
+    background-position: center;
+    background-repeat: no-repeat;
+    left: 0;
+    height: 11px;
+    right: 0;
+    bottom: -22px;
+    z-index: 99;
+}
+.section-heading p {
+    max-width: 439px;
+    margin: auto;
+    font-size: 18px;
+}
+
+.services .services-group.service-date {
+    border-color: #127384;
+}
+.services .services-group {
+    margin: 0 0 24px;
+    padding: 24px;
+    border-bottom: 2px solid #127384;
+    text-align: center;
+    position: relative;
+}
+
+.services .services-group::before {
+    position: absolute;
+    top: 72px;
+    right: 0;
+    left: calc(50% + 65px);
+    Content: "";
+    border: 1px dashed #DBDBDB;
+    width: calc(100% - 106px);
+}
+.services .services-group .services-icon {
+    border-radius: 50px;
+    margin: 0 0 35px;
+    padding: 10px;
+    background: #ffffff;
+    position: relative;
+    z-index: 99;
+}
+
+.services .services-group .services-icon .icon-img {
+    border-radius: 50px;
+    width: 72px;
+    height: 72px;
+    padding: 10px;
+}
+
+.services .services-group .services-content h3 {
+    font-weight: 600;
+    margin: 0 0 10px;
+}
+h3 {
+    font-weight: 700;
+    font-size: 28px;
+    color: #111111;
+}
+p:last-child {
+    margin-bottom: 0;
+}
+
+.services .services-group {
+    margin: 0 0 24px;
+    padding: 24px;
+    border-bottom: 2px solid #127384;
+    text-align: center;
+    position: relative;
+}
+.book-card .card-header h4 span, .chat-window .chat-cont-left .chat-header .chat-compose, .chat-window .chat-cont-right .chat-header .chat-options > a, .btn-file, .order-confirmation .place-order-btn a, .services .services-group .services-icon, .services .services-group .services-icon .icon-img, .listing-item .listing-content .listing-features .author-img img, .listing-item .listing-content .listing-features .listing-title a, .header .header-navbar-rht .has-arrow .logged-item .nav-link, .header .header-navbar-rht .has-arrow.logged-item .nav-link {
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: inline-flex
+;
+}
+.border-secondary {
+    border: 2px dashed #127384;
+}
+.services .services-group.service-loc {
+    border-color: #FF9307;
+
+}
+.services .services-group.service-book {
+    border-color: #201F1D;
+}
+
+.services .services-group {
+    margin: 0 0 24px;
+    padding: 24px;
+    border-bottom: 2px solid #127384;
+    text-align: center;
+    position: relative;
+}
+.book-card .card-header h4 span, .chat-window .chat-cont-left .chat-header .chat-compose, .chat-window .chat-cont-right .chat-header .chat-options > a, .btn-file, .order-confirmation .place-order-btn a, .services .services-group .services-icon, .services .services-group .services-icon .icon-img, .listing-item .listing-content .listing-features .author-img img, .listing-item .listing-content .listing-features .listing-title a, .header .header-navbar-rht .has-arrow .logged-item .nav-link, .header .header-navbar-rht .has-arrow.logged-item .nav-link {
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: inline-flex
+;
+}
+
+.border-dark {
+    border: 2px dashed #201F1D;
+}
+.border-dark {
+    --bs-border-opacity: 1;
+    border-color: rgba(var(--bs-dark-rgb), var(--bs-border-opacity)) !important;
+}
+
+.book-card .card-header h4 span, .chat-window .chat-cont-left .chat-header .chat-compose, .chat-window .chat-cont-right .chat-header .chat-options > a, .btn-file, .order-confirmation .place-order-btn a, .services .services-group .services-icon, .services .services-group .services-icon .icon-img, .listing-item .listing-content .listing-features .author-img img, .listing-item .listing-content .listing-features .listing-title a, .header .header-navbar-rht .has-arrow .logged-item .nav-link, .header .header-navbar-rht .has-arrow.logged-item .nav-link {
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: inline-flex
+;
+}
+.border-warning {
+    border: 2px dashed #FF9307;
+}
+.border-warning {
+    --bs-border-opacity: 1;
+    border-color: rgba(var(--bs-warning-rgb), var(--bs-border-opacity)) !important;
+}
+
+.services .services-group1:before {
+    Content: "";
+    border: 1px dashed #dbdbdb;
+
+    position: absolute;
+    width: 0;
+}
+
+@media only screen and (max-width: 600px) {
+    .services .services-group:before {
+        visibility: hidden;
+        display: none;
+    }
+    .service-right{
+        display: none;
+    }
+  }

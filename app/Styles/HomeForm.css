@@ -1,0 +1,235 @@
+/* Main container styling */
+.search-box-banner {
+    background: #ffffff;
+    box-shadow: 0px 4px 24px rgba(225, 225, 225, 0.25);
+    border-radius: 10px;
+    padding: 30px;
+    z-index: 1;
+    position: relative;
+    margin: -35px auto auto;
+}
+
+/* Input block styling */
+.search-box-banner .input-block {
+    margin: 0;
+    padding: 0 10px;
+}
+
+.search-box-banner .input-block label {
+    margin: 0 0 10px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #111;
+}
+
+/* Form control styling */
+.input-block .form-control {
+    background: #F5F5F5;
+    border: 1px solid #F4F4F4;
+    box-shadow: none;
+    border-radius: 5px;
+    margin: 0;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #201F1D;
+}
+
+/* Error styling for input blocks */
+.input-block.error .form-control {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.input-block.error label {
+    color: #dc3545;
+}
+
+/* Error text styling */
+.error-text {
+    color: #dc3545;
+    font-size: 12px;
+    margin: 5px 0 0 10px;
+    font-weight: 500;
+}
+
+/* Search button styling */
+.search-box-banner .search-btn .search-button {
+    background-color: #FFA633;
+    border: 1px solid #FFA633;
+    box-shadow: inset 0 0 0 #ffffff;
+    color: #ffffff;
+    width: 100%;
+    padding: 10px 12px;
+}
+
+/* Column group styling */
+.search-box-banner .column-group-main {
+    -ms-flex: 29%;
+    flex: 29%;
+    max-width: 29%;
+}
+
+.search-box-banner .column-group-last {
+    -ms-flex: 13%;
+    flex: 13%;
+    max-width: 13%;
+}
+
+.search-box-banner .column-group-last .search-btn {
+    margin-top: 30px;
+}
+
+.search-box-banner .column-group-last:last-child {
+    padding-right: 0;
+}
+
+/* Input icon styling */
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+}
+
+.input-icon + .form-control {
+    padding-left: 36px; /* Space for the icon */
+}
+
+/* Error outline styling */
+.error-outline {
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+.error-outline:hover {
+    background-color: #fff5f5 !important;
+    border-color: #dc3545 !important;
+}
+
+/* Step Transition Animations */
+.step-container {
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.step-content {
+    position: relative;
+    width: 100%;
+    transition: all 0.3s ease-in-out;
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.step-container.animating .step-content {
+    transition: all 0.3s ease-in-out;
+}
+
+.step-container.animating.forward .step-content {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.step-container.animating.backward .step-content {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* Slide in animations */
+.step-container:not(.animating) .step-content {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Fade animations for smoother transitions */
+.step-container .step-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover effects for interactive elements */
+.card {
+    transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Button hover animations */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Progress indicator animation */
+.progress-bar {
+    transition: width 0.3s ease-in-out;
+}
+
+/* Form validation animations */
+.form-control:focus {
+    animation: pulse 0.2s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* Success state animations */
+.success-animation {
+    animation: successPulse 0.5s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}

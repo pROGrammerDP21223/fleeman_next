@@ -1,0 +1,15 @@
+.breadcrumb-bar {
+    background: #201F1D;
+    padding: 60px 0 60px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.breadcrumb-bar .breadcrumb-item.active {
+    color: #FFA633;
+}
+
+.breadcrumb-bar .breadcrumb-item + .breadcrumb-item::before {
+    color: #ffffff;
+}

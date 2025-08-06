@@ -1,0 +1,9 @@
+@echo off
+echo Starting Fleeman Frontend...
+echo.
+echo Installing dependencies...
+call npm install
+echo.
+echo Starting Next.js development server...
+call npm run dev
+pause 
