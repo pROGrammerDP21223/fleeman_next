@@ -224,9 +224,9 @@ export function useBookingForm(vehicles = [], addons = []) {
     const bookingData = prepareBookingData(formData, hubs, vehicles, addons);
 
     // Clear any existing booking data and save new booking data
-    // This ensures only one booking entry exists in localStorage
-    localStorage.removeItem("bookingData");
-    localStorage.setItem("bookingData", JSON.stringify(bookingData));
+    // This ensures only one booking entry exists in sessionStorage
+    sessionStorage.removeItem("bookingData");
+    sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
     // Dispatch custom event to notify ConditionalForm component
     window.dispatchEvent(new Event('bookingDataChanged'));

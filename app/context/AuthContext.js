@@ -48,21 +48,21 @@ export function AuthProvider({ children }) {
               const userData = data.user || data.userData || data;
               setUser(userData);
             } else {
-              // Token is invalid, clear it
-              document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-              localStorage.removeItem('user');
+                          // Token is invalid, clear it
+            document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            sessionStorage.removeItem('user');
             }
           } catch (error) {
             console.error('Token verification error:', error);
-            // On error, fall back to localStorage data
-            const storedUser = localStorage.getItem('user');
+                      // On error, fall back to sessionStorage data
+          const storedUser = sessionStorage.getItem('user');
             if (storedUser) {
               setUser(JSON.parse(storedUser));
             }
           }
         } else {
-          // Try to get user from localStorage as fallback
-          const storedUser = localStorage.getItem('user');
+          // Try to get user from sessionStorage as fallback
+          const storedUser = sessionStorage.getItem('user');
           if (storedUser) {
             setUser(JSON.parse(storedUser));
           }
@@ -100,10 +100,10 @@ export function AuthProvider({ children }) {
         const token = data.token || data.accessToken || data.access_token;
         document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
         
-        // Store user in state and localStorage
+        // Store user in state and sessionStorage
         const userData = data.user || data.userData || data;
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        sessionStorage.setItem('user', JSON.stringify(userData));
         
         return { success: true };
       } else {
@@ -134,10 +134,10 @@ export function AuthProvider({ children }) {
         const token = data.token || data.accessToken || data.access_token;
         document.cookie = `auth_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
         
-        // Store user in state and localStorage
+        // Store user in state and sessionStorage
         const userDataResponse = data.user || data.userData || data;
         setUser(userDataResponse);
-        localStorage.setItem('user', JSON.stringify(userDataResponse));
+        sessionStorage.setItem('user', JSON.stringify(userDataResponse));
         
         return { success: true };
       } else {
@@ -154,9 +154,9 @@ export function AuthProvider({ children }) {
     // Clear the token cookie
     document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     
-    // Clear user from state and localStorage
+    // Clear user from state and sessionStorage
     setUser(null);
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     
     // Redirect to home page
     router.push('/');
@@ -188,10 +188,10 @@ export function AuthProvider({ children }) {
 
       // Adjust this based on your backend API's response structure
       if (data.success || data.user || data.userData) {
-        // Update user in state and localStorage
+        // Update user in state and sessionStorage
         const updatedUserData = data.user || data.userData || data;
         setUser(updatedUserData);
-        localStorage.setItem('user', JSON.stringify(updatedUserData));
+        sessionStorage.setItem('user', JSON.stringify(updatedUserData));
         
         return { success: true };
       } else {

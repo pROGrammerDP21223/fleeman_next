@@ -117,8 +117,8 @@ export default function MyBookingsPage() {
   };
 
   const handleModifyBooking = (bookingId) => {
-    // Store the booking ID in localStorage for the modify page
-    localStorage.setItem('modifyBookingId', bookingId);
+    // Store the booking ID in sessionStorage for the modify page
+    sessionStorage.setItem('modifyBookingId', bookingId);
     router.push('/modify-booking');
   };
 

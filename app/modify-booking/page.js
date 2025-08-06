@@ -136,7 +136,7 @@ export default function ModifyBookingPage() {
 
   useEffect(() => {
     // Load existing booking data
-    const existingBookingData = localStorage.getItem('bookingData');
+    const existingBookingData = sessionStorage.getItem('bookingData');
     if (existingBookingData) {
       try {
         const parsed = JSON.parse(existingBookingData);
@@ -289,14 +289,14 @@ export default function ModifyBookingPage() {
 
     // Handle post-submission logic
     if (data?.confirmed) {
-      // Booking confirmed, remove from DB and localStorage
+      // Booking confirmed, remove from DB and sessionStorage
       await fetch(`/api/bookings/${data.id}`, {
         method: 'DELETE'
       });
-      localStorage.removeItem('bookingData');
+      sessionStorage.removeItem('bookingData');
     } else {
-      // Temporarily store it in localStorage
-      localStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
+      // Temporarily store it in sessionStorage
+      sessionStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
     }
 
     alert('Booking submitted successfully!');

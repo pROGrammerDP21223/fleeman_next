@@ -12,8 +12,8 @@ const page = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if booking data exists in localStorage
-    const bookingData = localStorage.getItem('bookingData');
+    // Check if booking data exists in sessionStorage
+    const bookingData = sessionStorage.getItem('bookingData');
     
     if (!bookingData) {
       // No booking data found, redirect to home page
@@ -86,7 +86,7 @@ const page = () => {
     }
   };
 
-  // Show loading state while checking localStorage and fetching user data
+  // Show loading state while checking sessionStorage and fetching user data
   if (isLoading) {
     return (
       <div className="container-fluid py-5">
@@ -110,7 +110,7 @@ const page = () => {
           <UserForm 
             onClearBooking={() => {
               // Clear booking data and redirect to home
-              localStorage.removeItem('bookingData');
+              sessionStorage.removeItem('bookingData');
               router.push('/');
             }}
             userData={userData}

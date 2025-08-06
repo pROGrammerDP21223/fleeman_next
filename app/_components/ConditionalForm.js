@@ -13,7 +13,7 @@ export default function ConditionalForm() {
 
   const checkBookingData = () => {
     try {
-      const bookingData = localStorage.getItem('bookingData');
+      const bookingData = sessionStorage.getItem('bookingData');
       if (bookingData) {
         const parsedData = JSON.parse(bookingData);
         // Check if the booking data has the required fields
@@ -44,7 +44,7 @@ export default function ConditionalForm() {
         setIsEditing(false);
       }
     } catch (error) {
-      console.error('Error reading booking data from localStorage:', error);
+      console.error('Error reading booking data from sessionStorage:', error);
       setHasBookingData(false);
       setHasCompletedBooking(false);
       setIsEditing(false);
@@ -53,10 +53,10 @@ export default function ConditionalForm() {
   };
 
   useEffect(() => {
-    // Check localStorage for booking data on mount
+    // Check sessionStorage for booking data on mount
     checkBookingData();
 
-    // Listen for storage events (when localStorage changes in other tabs)
+    // Listen for storage events (when sessionStorage changes in other tabs)
     const handleStorageChange = (e) => {
       if (e.key === 'bookingData') {
         checkBookingData();
@@ -79,9 +79,9 @@ export default function ConditionalForm() {
   }, []);
 
   // Function to clear booking data and switch back to HomeForm
-  // This ensures only one booking entry exists in localStorage
+  // This ensures only one booking entry exists in sessionStorage
   const clearBookingData = () => {
-    localStorage.removeItem('bookingData');
+    sessionStorage.removeItem('bookingData');
     setHasBookingData(false);
     setHasCompletedBooking(false);
     // Dispatch custom event to notify other components
@@ -89,9 +89,9 @@ export default function ConditionalForm() {
   };
 
   // Function to start a new booking (clear old data and show HomeForm)
-  // This ensures only one booking entry exists in localStorage
+  // This ensures only one booking entry exists in sessionStorage
   const startNewBooking = () => {
-    localStorage.removeItem('bookingData');
+    sessionStorage.removeItem('bookingData');
     setHasBookingData(false);
     setHasCompletedBooking(false);
     setIsEditing(false);
@@ -101,7 +101,7 @@ export default function ConditionalForm() {
 
 
 
-  // Show loading state while checking localStorage
+  // Show loading state while checking sessionStorage
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">

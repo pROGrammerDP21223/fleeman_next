@@ -56,8 +56,8 @@ export default function UserForm({ onClearBooking, userData = null }) {
     e.preventDefault();
     console.log('Form Submitted:', formData);
     
-    // Get existing booking data from localStorage
-    const existingBookingData = localStorage.getItem('bookingData');
+    // Get existing booking data from sessionStorage
+    const existingBookingData = sessionStorage.getItem('bookingData');
     let completeBookingData = {};
     
     if (existingBookingData) {
@@ -75,8 +75,8 @@ export default function UserForm({ onClearBooking, userData = null }) {
       submittedAt: new Date().toISOString()
     };
     
-    // Save the complete booking data back to localStorage (preserve existing data)
-    localStorage.setItem('bookingData', JSON.stringify(finalBookingData));
+    // Save the complete booking data back to sessionStorage (preserve existing data)
+    sessionStorage.setItem('bookingData', JSON.stringify(finalBookingData));
     
     // Dispatch custom event to notify other components
     window.dispatchEvent(new Event('bookingDataChanged'));

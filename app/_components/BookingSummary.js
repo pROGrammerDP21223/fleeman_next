@@ -36,14 +36,14 @@ export default function BookingSummary() {
       return;
     }
 
-    // For now, we'll use localStorage to get booking data
+    // For now, we'll use sessionStorage to get booking data
     // In a real app, this would be an API call
     async function fetchData() {
       setLoading(true);
       
       try {
-        // Get booking data from localStorage
-        const bookingData = localStorage.getItem('bookingData');
+        // Get booking data from sessionStorage
+        const bookingData = sessionStorage.getItem('bookingData');
         let bookingsList = [];
         
         if (bookingData) {

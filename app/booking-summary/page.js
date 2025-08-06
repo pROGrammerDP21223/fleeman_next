@@ -11,8 +11,8 @@ export default function BookingSummaryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if booking data exists in localStorage
-    const storedBookingData = localStorage.getItem('bookingData');
+    // Check if booking data exists in sessionStorage
+    const storedBookingData = sessionStorage.getItem('bookingData');
     
     if (!storedBookingData) {
       // No booking data found, redirect to home page
@@ -52,10 +52,10 @@ export default function BookingSummaryPage() {
         .find(row => row.startsWith('auth_token='))
         ?.split('=')[1];
 
-      if (!token) {
-        alert('Please log in to confirm your booking');
-        return;
-      }
+      // if (!token) {
+      //   alert('Please log in to confirm your booking');
+      //   return;
+      // }
 
       // Prepare the booking data for the backend
       const bookingDataToSend = {
@@ -97,8 +97,8 @@ export default function BookingSummaryPage() {
       // Show success message
       alert('Booking confirmed successfully! Your booking has been saved to our system.');
       
-      // Clear the booking data from localStorage
-      localStorage.removeItem('bookingData');
+      // Clear the booking data from sessionStorage
+      sessionStorage.removeItem('bookingData');
       
       // Redirect to home page or my-bookings page
       router.push('/my-bookings');
@@ -111,11 +111,11 @@ export default function BookingSummaryPage() {
 
   const handleCancelBooking = () => {
     // Clear the booking data and redirect to home
-    localStorage.removeItem('bookingData');
+    sessionStorage.removeItem('bookingData');
     router.push('/');
   };
 
-  // Show loading state while checking localStorage
+  // Show loading state while checking sessionStorage
   if (isLoading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">

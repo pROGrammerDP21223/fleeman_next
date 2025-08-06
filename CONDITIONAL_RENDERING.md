@@ -1,6 +1,6 @@
 # Conditional Rendering System
 
-This system implements conditional rendering with three states based on localStorage data:
+This system implements conditional rendering with three states based on sessionStorage data:
 1. **HomeForm**: No booking data exists
 2. **UserForm**: Booking data exists but no user details
 3. **BookingSummary**: Complete booking with user details
@@ -11,32 +11,32 @@ This system implements conditional rendering with three states based on localSto
 - **Location**: `app/_components/ConditionalForm.js`
 - **Purpose**: Main wrapper component that decides which component to render
 - **Logic**: 
-  - Checks localStorage for `bookingData` on mount
+  - Checks sessionStorage for `bookingData` on mount
   - Listens for storage events and custom events
   - Renders appropriate component based on data state
 
 ### 2. Flow:
-1. **Initial State**: HomeForm is displayed (no booking data in localStorage)
+1. **Initial State**: HomeForm is displayed (no booking data in sessionStorage)
 2. **User Completes Booking**: 
    - User goes through booking steps (location, hub, vehicle, addons)
-   - When booking is submitted, data is saved to localStorage
+   - When booking is submitted, data is saved to sessionStorage
    - Custom event `bookingDataChanged` is dispatched
    - ConditionalForm detects the change and switches to UserForm
 3. **User Completes UserForm**:
    - User fills out personal information
    - On submit, user data is **appended** to existing booking data
-   - Complete booking data is saved back to localStorage
+   - Complete booking data is saved back to sessionStorage
    - ConditionalForm switches to BookingSummary
 4. **BookingSummary**:
    - Shows confirmation with booking and user details
-   - "Start New Booking" button clears localStorage and returns to HomeForm
+   - "Start New Booking" button clears sessionStorage and returns to HomeForm
 
 ### 3. Key Features:
 - **Data Merging**: User form data is appended to existing booking data
 - **Three-State System**: HomeForm → UserForm → BookingSummary
-- **Real-time Updates**: Listens for localStorage changes across tabs
-- **Loading State**: Shows spinner while checking localStorage
-- **Error Handling**: Gracefully handles localStorage errors
+- **Real-time Updates**: Listens for sessionStorage changes across tabs
+- **Loading State**: Shows spinner while checking sessionStorage
+- **Error Handling**: Gracefully handles sessionStorage errors
 - **Manual Reset**: "Start New Booking" button allows users to reset
 
 ### 4. Components Updated:
@@ -46,7 +46,7 @@ This system implements conditional rendering with three states based on localSto
 - `app/_components/BookingSummary.js`: New component for completed bookings
 - `app/_components/hooks/useBookingForm.js`: Dispatches custom events
 
-### 5. localStorage Structure:
+### 5. sessionStorage Structure:
 ```javascript
 {
   "bookingData": {
@@ -71,7 +71,7 @@ This system implements conditional rendering with three states based on localSto
 ```
 
 ### 6. Events:
-- `storage`: Fired when localStorage changes in other tabs
+- `storage`: Fired when sessionStorage changes in other tabs
 - `bookingDataChanged`: Custom event fired when booking data changes in same tab
 
 ### 7. Component States:

@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   // Check for remembered user on component mount
   useEffect(() => {
-    const rememberedUser = localStorage.getItem('rememberedUser');
+    const rememberedUser = sessionStorage.getItem('rememberedUser');
     if (rememberedUser) {
       try {
         const userData = JSON.parse(rememberedUser);
@@ -81,12 +81,12 @@ export default function LoginPage() {
       if (result.success) {
         // Handle Remember Me functionality
         if (rememberMe) {
-          localStorage.setItem('rememberedUser', JSON.stringify({
+          sessionStorage.setItem('rememberedUser', JSON.stringify({
             email: formData.email,
             rememberMe: true
           }));
         } else {
-          localStorage.removeItem('rememberedUser');
+          sessionStorage.removeItem('rememberedUser');
         }
         
         // Redirect to home page or dashboard
