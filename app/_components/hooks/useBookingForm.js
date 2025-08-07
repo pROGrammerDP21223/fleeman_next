@@ -30,6 +30,10 @@ export function useBookingForm(vehicles = [], addons = []) {
   const [hubs, setHubs] = useState([]);
   const [loadingHubs, setLoadingHubs] = useState(false);
   const [hubError, setHubError] = useState("");
+  const [returnHubs, setReturnHubs] = useState([]);
+  const [loadingReturnHubs, setLoadingReturnHubs] = useState(false);
+  const [returnHubError, setReturnHubError] = useState("");
+  const [selectedReturnHub, setSelectedReturnHub] = useState("");
 
   // Memoized form data
   const formData = useMemo(() => ({
@@ -45,12 +49,13 @@ export function useBookingForm(vehicles = [], addons = []) {
     returnState,
     returnCity,
     selectedHub,
+    selectedReturnHub,
     selectedVehicleId,
     selectedAddons,
   }), [
     pickupDate, returnDate, pickupLocationType, pickupAirport, pickupState, pickupCity,
     returnLocationEnabled, returnLocationType, returnAirport, returnState, returnCity,
-    selectedHub, selectedVehicleId, selectedAddons
+    selectedHub, selectedReturnHub, selectedVehicleId, selectedAddons
   ]);
 
   // Validation function
@@ -143,6 +148,8 @@ export function useBookingForm(vehicles = [], addons = []) {
       setReturnState("");
       setReturnCity("");
       setReturnAirport("");
+      // When return location is disabled, set return hub to same as pickup hub
+      setSelectedReturnHub(selectedHub);
       setErrors((prev) => {
         const copy = { ...prev };
         delete copy.returnLocationType;
@@ -152,7 +159,7 @@ export function useBookingForm(vehicles = [], addons = []) {
         return copy;
       });
     }
-  }, []);
+  }, [selectedHub]);
 
   const handleReturnLocationTypeChange = useCallback((value) => {
     setReturnLocationType(value);
@@ -176,6 +183,14 @@ export function useBookingForm(vehicles = [], addons = []) {
 
   const handleHubSelect = useCallback((value) => {
     setSelectedHub(value);
+    // If return location is not enabled, automatically set return hub to same as pickup hub
+    if (!returnLocationEnabled) {
+      setSelectedReturnHub(value);
+    }
+  }, [returnLocationEnabled]);
+
+  const handleReturnHubSelect = useCallback((value) => {
+    setSelectedReturnHub(value);
   }, []);
 
   const handleVehicleSelect = useCallback((vehicleId) => {
@@ -204,6 +219,15 @@ export function useBookingForm(vehicles = [], addons = []) {
         toast.error(VALIDATION_MESSAGES.HUB_SELECTION_REQUIRED);
         return;
       }
+      // If return location is enabled, also validate return hub selection
+      if (returnLocationEnabled && !selectedReturnHub) {
+        toast.error("Please select a return hub");
+        return;
+      }
+      // If return location is not enabled, ensure return hub is set to pickup hub
+      if (!returnLocationEnabled && selectedHub && !selectedReturnHub) {
+        setSelectedReturnHub(selectedHub);
+      }
     } else if (step === BOOKING_STEPS.VEHICLE) {
       if (!selectedVehicleId) {
         toast.error(VALIDATION_MESSAGES.VEHICLE_SELECTION_REQUIRED);
@@ -221,7 +245,7 @@ export function useBookingForm(vehicles = [], addons = []) {
       return;
     }
 
-    const bookingData = prepareBookingData(formData, hubs, vehicles, addons);
+    const bookingData = prepareBookingData(formData, hubs, vehicles, addons, returnHubs);
 
     // Clear any existing booking data and save new booking data
     // This ensures only one booking entry exists in sessionStorage
@@ -244,36 +268,74 @@ export function useBookingForm(vehicles = [], addons = []) {
   // Fetch hubs when step changes
   useEffect(() => {
     if (step === BOOKING_STEPS.HUB) {
+      // Fetch pickup hubs
       setLoadingHubs(true);
       setHubError("");
-      const type = pickupLocationType === "airport" ? "airport" : "city";
-      const value = type === "airport" ? pickupAirport : pickupCity;
+      const pickupType = pickupLocationType === "airport" ? "airport" : "city";
+      const pickupValue = pickupType === "airport" ? pickupAirport : pickupCity;
       
-      if (!value) {
+      if (!pickupValue) {
         setHubError("Pickup location is missing.");
         setLoadingHubs(false);
         return;
       }
 
-             fetchHubs(type, value)
-         .then((data) => {
-           setHubs(data);
-           setLoadingHubs(false);
-           
-                       // If we're editing and have a selected hub name, find the corresponding ID
-            if (isEditing && selectedHub && data.length > 0) {
-              const hub = data.find(h => h.location_Name === selectedHub);
-              if (hub) {
-                setSelectedHub(hub.location_Id.toString());
-              }
+      fetchHubs(pickupType, pickupValue)
+        .then((data) => {
+          setHubs(data);
+          setLoadingHubs(false);
+          
+          // If we're editing and have a selected hub name, find the corresponding ID
+          if (isEditing && selectedHub && data.length > 0) {
+            const hub = data.find(h => h.location_Name === selectedHub);
+            if (hub) {
+              setSelectedHub(hub.location_Id.toString());
             }
-         })
+          }
+        })
         .catch(() => {
-          setHubError("Unable to fetch hubs. Please try again.");
+          setHubError("Unable to fetch pickup hubs. Please try again.");
           setLoadingHubs(false);
         });
+
+      // Fetch return hubs if return location is enabled
+      if (returnLocationEnabled) {
+        setLoadingReturnHubs(true);
+        setReturnHubError("");
+        const returnType = returnLocationType === "airport" ? "airport" : "city";
+        const returnValue = returnType === "airport" ? returnAirport : returnCity;
+        
+        if (!returnValue) {
+          setReturnHubError("Return location is missing.");
+          setLoadingReturnHubs(false);
+          return;
+        }
+
+        fetchHubs(returnType, returnValue)
+          .then((data) => {
+            setReturnHubs(data);
+            setLoadingReturnHubs(false);
+            
+            // If we're editing and have a selected return hub name, find the corresponding ID
+            if (isEditing && selectedReturnHub && data.length > 0) {
+              const hub = data.find(h => h.location_Name === selectedReturnHub);
+              if (hub) {
+                setSelectedReturnHub(hub.location_Id.toString());
+              }
+            }
+          })
+          .catch(() => {
+            setReturnHubError("Unable to fetch return hubs. Please try again.");
+            setLoadingReturnHubs(false);
+          });
+             } else {
+         // When return location is disabled, set return hub to same as pickup hub
+         setReturnHubs([]);
+         setSelectedReturnHub(selectedHub);
+         setReturnHubError("");
+       }
     }
-  }, [step, pickupLocationType, pickupAirport, pickupCity]);
+  }, [step, pickupLocationType, pickupAirport, pickupCity, returnLocationEnabled, returnLocationType, returnAirport, returnCity, isEditing, selectedHub, selectedReturnHub]);
 
   // Load existing booking data for editing
 
@@ -289,6 +351,13 @@ export function useBookingForm(vehicles = [], addons = []) {
     setReturnAirport("");
     setErrors({});
   }, [pickupLocationType]);
+
+  // Auto-sync return hub with pickup hub when return location is not enabled
+  useEffect(() => {
+    if (!returnLocationEnabled && selectedHub && selectedHub !== selectedReturnHub) {
+      setSelectedReturnHub(selectedHub);
+    }
+  }, [selectedHub, returnLocationEnabled, selectedReturnHub]);
 
   return {
     // State
@@ -311,6 +380,10 @@ export function useBookingForm(vehicles = [], addons = []) {
     hubs,
     loadingHubs,
     hubError,
+    returnHubs,
+    loadingReturnHubs,
+    returnHubError,
+    selectedReturnHub,
     isEditing,
 
     // Handlers
@@ -326,6 +399,7 @@ export function useBookingForm(vehicles = [], addons = []) {
     handleReturnStateChange,
     handleReturnCityChange,
     handleHubSelect,
+    handleReturnHubSelect,
     handleVehicleSelect,
     handleAddonToggle,
     handleBack,

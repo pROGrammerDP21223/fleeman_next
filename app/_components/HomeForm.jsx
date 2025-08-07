@@ -118,6 +118,12 @@ export default function HomeForm() {
                         onHubSelect={bookingForm.handleHubSelect}
                         onBack={animatedHandleBack}
                         onNext={animatedHandleNext}
+                        returnHubs={bookingForm.returnHubs}
+                        selectedReturnHub={bookingForm.selectedReturnHub}
+                        onReturnHubSelect={bookingForm.handleReturnHubSelect}
+                        loadingReturnHubs={bookingForm.loadingReturnHubs}
+                        returnHubError={bookingForm.returnHubError}
+                        returnLocationEnabled={bookingForm.returnLocationEnabled}
                     />
                 )}
 

@@ -52,10 +52,7 @@ export default function BookingSummaryPage() {
         .find(row => row.startsWith('auth_token='))
         ?.split('=')[1];
 
-      // if (!token) {
-      //   alert('Please log in to confirm your booking');
-      //   return;
-      // }
+    
 
       // Prepare the booking data for the backend
       const bookingDataToSend = {
@@ -70,17 +67,33 @@ export default function BookingSummaryPage() {
         submittedAt: new Date().toISOString()
       };
 
+      
+
       console.log('Sending booking data:', bookingDataToSend);
       
+      if (token) {
+        const response = await fetch('http://192.168.1.28:8080/api/bookings/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingDataToSend)
+        });
+      
+      }
+      else{
+        const response = await fetch('http://192.168.1.28:8080/api/bookings', {
+          method: 'POST',
+          headers: {
+  
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingDataToSend)
+        });
+      }
       // Send booking data to backend API
-      const response = await fetch('http://localhost:8081/api/booking-details/create-booking', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(bookingDataToSend)
-      });
+     
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);

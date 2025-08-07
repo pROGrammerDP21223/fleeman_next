@@ -41,7 +41,7 @@ export function createLocationObject(type, value, state, city) {
   return { type: "city", state, city };
 }
 
-export function prepareBookingData(formData, hubs = [], vehicles = [], addons = []) {
+export function prepareBookingData(formData, hubs = [], vehicles = [], addons = [], returnHubs = []) {
   const pickupLocation = createLocationObject(
     formData.pickupLocationType,
     formData.pickupAirport, // This will now be the airport code
@@ -64,6 +64,20 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
            hub.location_Id === parseInt(formData.selectedHub);
   });
   const hubName = selectedHub ? selectedHub.location_Name : formData.selectedHub;
+
+  // Find return hub name by ID - handle both string and number types
+  // If return location is not enabled, return hub is same as pickup hub
+  let returnHubName;
+  if (formData.returnLocationEnabled) {
+    const selectedReturnHub = returnHubs.find(hub => {
+      return hub.location_Id === formData.selectedReturnHub || 
+             hub.location_Id === parseInt(formData.selectedReturnHub);
+    });
+    returnHubName = selectedReturnHub ? selectedReturnHub.location_Name : formData.selectedReturnHub;
+  } else {
+    // When return location is not enabled, return hub is same as pickup hub
+    returnHubName = hubName;
+  }
 
   // Find vehicle name by ID - handle both string and number types
   const selectedVehicle = vehicles.find(vehicle => 
@@ -99,6 +113,7 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
     pickupLocation,
     returnLocation,
     selectedHub: hubName,
+    selectedReturnHub: returnHubName,
     selectedVehicle: vehicleName,
     selectedAddons: selectedAddonNames,
   };
