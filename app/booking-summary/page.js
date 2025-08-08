@@ -52,48 +52,97 @@ export default function BookingSummaryPage() {
         .find(row => row.startsWith('auth_token='))
         ?.split('=')[1];
 
-    
+      // Helper function to format dates for backend (yyyy-MM-dd'T'HH:mm:ss)
+      const formatDateForBackend = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return null;
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      };
+
+      // Helper function to ensure we have vehicle ID
+      const getVehicleId = (vehicleData) => {
+        if (!vehicleData) return null;
+        // If it's already a number, return it
+        if (typeof vehicleData === 'number') return vehicleData;
+        // If it's a string that can be converted to number, return the number
+        if (typeof vehicleData === 'string' && !isNaN(parseInt(vehicleData))) {
+          return parseInt(vehicleData);
+        }
+        // If it's an object with vehicleId, return that
+        if (typeof vehicleData === 'object' && vehicleData.vehicleId) {
+          return parseInt(vehicleData.vehicleId);
+        }
+        // If it's an object with id, return that
+        if (typeof vehicleData === 'object' && vehicleData.id) {
+          return parseInt(vehicleData.id);
+        }
+        // Otherwise, return null
+        return null;
+      };
+
+      // Helper function to ensure we have hub ID
+      const getHubId = (hubData) => {
+        if (!hubData) return null;
+        // If it's already a number, return it
+        if (typeof hubData === 'number') return hubData;
+        // If it's a string that can be converted to number, return the number
+        if (typeof hubData === 'string' && !isNaN(parseInt(hubData))) {
+          return parseInt(hubData);
+        }
+        // If it's an object with location_Id, return that
+        if (typeof hubData === 'object' && hubData.location_Id) {
+          return parseInt(hubData.location_Id);
+        }
+        // If it's an object with id, return that
+        if (typeof hubData === 'object' && hubData.id) {
+          return parseInt(hubData.id);
+        }
+        // Otherwise, return null
+        return null;
+      };
 
       // Prepare the booking data for the backend
       const bookingDataToSend = {
-        pickupDate: bookingData.pickupDate,
-        returnDate: bookingData.returnDate,
+        pickupDate: formatDateForBackend(bookingData.pickupDate),
+        returnDate: formatDateForBackend(bookingData.returnDate),
         pickupLocation: bookingData.pickupLocation,
         returnLocation: bookingData.returnLocation,
-        selectedHub: bookingData.selectedHub,
-        selectedVehicle: bookingData.selectedVehicle,
-        selectedAddons: bookingData.selectedAddons || [],
+        selectedHub: getHubId(bookingData.selectedHub),
+        selectedReturnHub: getHubId(bookingData.selectedReturnHub),
+        selectedVehicle: getVehicleId(bookingData.selectedVehicle),
+        selectedAddons: Array.isArray(bookingData.selectedAddons) 
+          ? bookingData.selectedAddons.map(id => parseInt(id)).filter(id => !isNaN(id))
+          : [],
         userDetails: bookingData.userDetails,
         submittedAt: new Date().toISOString()
       };
 
+      console.log('Sending booking data:', JSON.stringify(bookingDataToSend, null, 2));
       
-
-      console.log('Sending booking data:', bookingDataToSend);
+      // Use the correct API endpoint
+      const apiUrl = 'http://192.168.1.28:8080/api/bookings';
+      
+      const headers = {
+        'Content-Type': 'application/json'
+      };
       
       if (token) {
-        const response = await fetch('http://192.168.1.28:8080/api/bookings/', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(bookingDataToSend)
-        });
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       
-      }
-      else{
-        const response = await fetch('http://192.168.1.28:8080/api/bookings', {
-          method: 'POST',
-          headers: {
-  
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(bookingDataToSend)
-        });
-      }
-      // Send booking data to backend API
-     
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(bookingDataToSend)
+      });
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);

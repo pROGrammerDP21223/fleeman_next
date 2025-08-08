@@ -16,33 +16,41 @@ export default function UserForm({ onClearBooking, userData = null }) {
   // Pre-fill form with user data when component mounts or userData changes
   useEffect(() => {
     if (userData) {
+      // Helper to format date string to YYYY-MM-DD
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        // Handles both 'YYYY-MM-DD' and ISO strings
+        const d = new Date(dateStr);
+        if (isNaN(d)) return '';
+        return d.toISOString().slice(0, 10);
+      };
       setFormData(prev => ({
         ...prev,
         firstName: userData.firstName || userData.first_name || '',
         lastName: userData.lastName || userData.last_name || '',
         email: userData.email || '',
-        cell: userData.phone || userData.cell || userData.mobile || '',
+        cell: userData.mobileNumber?.toString() || userData.phone || userData.cell || userData.mobile || '',
         homePhone: userData.homePhone || userData.home_phone || '',
         address1: userData.address || userData.address1 || userData.street_address || '',
         address2: userData.address2 || userData.apt_suite || '',
         city: userData.city || '',
-        zip: userData.zipCode || userData.zip || userData.postal_code || '',
-        birthDate: userData.birthDate || userData.date_of_birth || '',
+        zip: userData.zipCode?.toString() || userData.zip || userData.postal_code || '',
+        birthDate: formatDate(userData.dob || userData.birthDate || userData.date_of_birth),
         // Driving license info
-        drivingLicense: userData.drivingLicense || userData.license_number || '',
-        dlIssuedBy: userData.dlIssuedBy || userData.license_issued_by || '',
-        dlValidThru: userData.dlValidThru || userData.license_expiry || '',
+        drivingLicense: userData.drivingLicenseId || userData.drivingLicense || userData.license_number || '',
+        dlIssuedBy: userData.drivingLicenseIssuedBy || userData.dlIssuedBy || userData.license_issued_by || '',
+        dlValidThru: formatDate(userData.drivingLicenseValidThru || userData.dlValidThru || userData.license_expiry),
         // International driving permit
-        idpNo: userData.idpNo || userData.idp_number || '',
+        idpNo: userData.idp || userData.idpNo || userData.idp_number || '',
         idpIssuedBy: userData.idpIssuedBy || userData.idp_issued_by || '',
-        idpValidThru: userData.idpValidThru || userData.idp_expiry || '',
+        idpValidThru: formatDate(userData.idpValidThru || userData.idp_validThru || userData.idp_expiry),
         // Passport info
         passportNo: userData.passportNo || userData.passport_number || '',
         passportIssuedBy: userData.passportIssuedBy || userData.passport_issued_by || '',
-        passportValid: userData.passportValid || userData.passport_expiry || '',
+        passportValid: formatDate(userData.passportValidate || userData.passportValid || userData.passport_expiry),
         // Payment info
-        CreditCardType: userData.CreditCardType || userData.credit_card_type || '',
-        CreditCardNo: userData.CreditCardNo || userData.credit_card_number || ''
+        CreditCardType: userData.creditCardType || userData.CreditCardType || userData.credit_card_type || '',
+        CreditCardNo: userData.creditCardNo || userData.CreditCardNo || userData.credit_card_number || ''
       }));
     }
   }, [userData]);

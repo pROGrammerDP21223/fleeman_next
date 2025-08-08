@@ -42,6 +42,7 @@ export function createLocationObject(type, value, state, city) {
 }
 
 export function prepareBookingData(formData, hubs = [], vehicles = [], addons = [], returnHubs = []) {
+  
   const pickupLocation = createLocationObject(
     formData.pickupLocationType,
     formData.pickupAirport, // This will now be the airport code
@@ -58,41 +59,41 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
       )
     : pickupLocation;
 
-  // Find hub name by ID - handle both string and number types
+  // Find hub by ID - handle both string and number types
   const selectedHub = hubs.find(hub => {
     return hub.location_Id === formData.selectedHub || 
            hub.location_Id === parseInt(formData.selectedHub);
   });
-  const hubName = selectedHub ? selectedHub.location_Name : formData.selectedHub;
+  const hubId = selectedHub ? selectedHub.location_Id : formData.selectedHub;
 
-  // Find return hub name by ID - handle both string and number types
+  // Find return hub by ID - handle both string and number types
   // If return location is not enabled, return hub is same as pickup hub
-  let returnHubName;
+  let returnHubId;
   if (formData.returnLocationEnabled) {
     const selectedReturnHub = returnHubs.find(hub => {
       return hub.location_Id === formData.selectedReturnHub || 
              hub.location_Id === parseInt(formData.selectedReturnHub);
     });
-    returnHubName = selectedReturnHub ? selectedReturnHub.location_Name : formData.selectedReturnHub;
+    returnHubId = selectedReturnHub ? selectedReturnHub.location_Id : formData.selectedReturnHub;
   } else {
     // When return location is not enabled, return hub is same as pickup hub
-    returnHubName = hubName;
+    returnHubId = hubId;
   }
 
-  // Find vehicle name by ID - handle both string and number types
+  // Find vehicle by ID - handle both string and number types
   const selectedVehicle = vehicles.find(vehicle => 
     vehicle.vehicleId === formData.selectedVehicleId || 
     vehicle.vehicleId === parseInt(formData.selectedVehicleId)
   );
-  const vehicleName = selectedVehicle ? selectedVehicle.vehicleType : formData.selectedVehicleId;
+  const vehicleId = selectedVehicle ? selectedVehicle.vehicleId : formData.selectedVehicleId;
 
-  // Find addon names by IDs - handle both string and number types
-  const selectedAddonNames = formData.selectedAddons.map(addonId => {
+  // Find addon IDs - handle both string and number types
+  const selectedAddonIds = formData.selectedAddons.map(addonId => {
     const addon = addons.find(addon => 
       addon.addOnId === addonId || 
       addon.addOnId === parseInt(addonId)
     );
-    return addon ? addon.addOnName : addonId;
+    return addon ? addon.addOnId : addonId;
   });
 
   // Format dates to match backend expectation (yyyy-MM-dd'T'HH:mm)
@@ -112,10 +113,10 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
     returnDate: formatDateForBackend(formData.returnDate),
     pickupLocation,
     returnLocation,
-    selectedHub: hubName,
-    selectedReturnHub: returnHubName,
-    selectedVehicle: vehicleName,
-    selectedAddons: selectedAddonNames,
+    selectedHub: hubId,
+    selectedReturnHub: returnHubId,
+    selectedVehicle: vehicleId,
+    selectedAddons: selectedAddonIds,
   };
 } 
 

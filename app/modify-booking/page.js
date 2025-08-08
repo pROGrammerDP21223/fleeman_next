@@ -137,6 +137,7 @@ export default function ModifyBookingPage() {
   useEffect(() => {
     // Load existing booking data
     const existingBookingData = sessionStorage.getItem('bookingData');
+    
     if (existingBookingData) {
       try {
         const parsed = JSON.parse(existingBookingData);
@@ -174,6 +175,7 @@ export default function ModifyBookingPage() {
         
         // Other selections
         if (parsed.selectedHub) newFormData.selectedHub = String(parsed.selectedHub);
+        if (parsed.selectedReturnHub) newFormData.selectedReturnHub = String(parsed.selectedReturnHub);
         if (parsed.selectedVehicle) newFormData.selectedVehicleId = String(parsed.selectedVehicle);
         if (parsed.selectedAddons) newFormData.selectedAddons = Array.isArray(parsed.selectedAddons) ? parsed.selectedAddons.map(String) : [];
         
@@ -222,10 +224,25 @@ export default function ModifyBookingPage() {
       return;
     }
 
+    // Helper function to format dates for backend (yyyy-MM-dd'T'HH:mm:ss)
+    const formatDateForBackend = (dateString) => {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return null;
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
     // Prepare updated booking data
     const updatedBookingData = {
-      pickupDate: formData.pickupDate,
-      returnDate: formData.returnDate,
+      pickupDate: formatDateForBackend(formData.pickupDate),
+      returnDate: formatDateForBackend(formData.returnDate),
       pickupLocation: {
         type: formData.pickupLocationType,
         value: formData.pickupLocationType === 'airport' ? formData.pickupAirport : null,
@@ -238,9 +255,10 @@ export default function ModifyBookingPage() {
         state: formData.returnLocationType === 'city' ? formData.returnState : null,
         city: formData.returnLocationType === 'city' ? formData.returnCity : null
       } : null,
-      selectedHub: formData.selectedHub,
-      selectedVehicle: formData.selectedVehicleId,
-      selectedAddons: formData.selectedAddons,
+      selectedHub: formData.selectedHub ? parseInt(formData.selectedHub) : null,
+      selectedReturnHub: formData.selectedReturnHub ? parseInt(formData.selectedReturnHub) : null,
+      selectedVehicle: formData.selectedVehicleId ? parseInt(formData.selectedVehicleId) : null,
+       selectedAddons: formData.selectedAddons.map(id => parseInt(id)).filter(id => !isNaN(id)),
       userDetails: {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -270,42 +288,37 @@ export default function ModifyBookingPage() {
       submittedAt: new Date().toISOString()
     };
 
-    // Save updated booking data
-     try {
-    // Send booking data to API
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedBookingData)
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to submit booking');
-    }
-
-    const data = await res.json();
-
-    // Handle post-submission logic
-    if (data?.confirmed) {
-      // Booking confirmed, remove from DB and sessionStorage
-      await fetch(`/api/bookings/${data.id}`, {
-        method: 'DELETE'
+    // Save updated booking data to sessionStorage first
+    // Clear existing booking data and save the updated data
+    sessionStorage.removeItem('bookingData');
+    sessionStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('bookingDataChanged'));
+    
+    // Try to send to API (optional - for immediate backend update)
+    try {
+      
+      const res = await fetch('http://localhost:8081/api/booking-details/create-booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedBookingData)
       });
-      sessionStorage.removeItem('bookingData');
-    } else {
-      // Temporarily store it in sessionStorage
-      sessionStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        // If booking is confirmed, we can optionally remove from sessionStorage
+        if (data?.confirmed) {
+          sessionStorage.removeItem('bookingData');
+          window.dispatchEvent(new Event('bookingDataChanged'));
+        }
+      }
+    } catch (error) {
+      // Don't show error to user since data is saved locally
     }
-
-    alert('Booking submitted successfully!');
-    router.push('/booking-summary');
-
-  } catch (error) {
-    console.error('Booking submission failed:', error);
-    alert('An error occurred while submitting your booking.');
-  }
     
     alert('Booking updated successfully!');
     router.push('/booking-summary');
