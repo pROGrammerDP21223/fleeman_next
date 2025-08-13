@@ -59,7 +59,7 @@ const page = () => {
       }
 
       // Fetch user profile from external API
-      const response = await fetch('http://localhost:8081/members/M00001', {
+      const response = await fetch('http://localhost:8081/api/auth/profile', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -41,8 +41,39 @@ export function createLocationObject(type, value, state, city) {
   return { type: "city", state, city };
 }
 
+// Utility function to get vehicle name by ID
+export function getVehicleNameById(vehicleId, vehicles = []) {
+  if (!vehicleId) return 'N/A';
+  const vehicle = vehicles.find(vehicle => 
+    vehicle.vehicleId === vehicleId || 
+    vehicle.vehicleId === parseInt(vehicleId)
+  );
+  return vehicle ? vehicle.vehicleType : vehicleId;
+}
+
+// Utility function to get addon names by IDs
+export function getAddonNamesByIds(addonIds = [], addons = []) {
+  if (!addonIds || !Array.isArray(addonIds)) return [];
+  return addonIds.map(addonId => {
+    const addon = addons.find(addon => 
+      addon.addOnId === addonId || 
+      addon.addOnId === parseInt(addonId)
+    );
+    return addon ? addon.addOnName : addonId;
+  });
+}
+
+// Utility function to get hub name by ID
+export function getHubNameById(hubId, hubs = []) {
+  if (!hubId) return 'N/A';
+  const hub = hubs.find(hub => 
+    hub.location_Id === hubId || 
+    hub.location_Id === parseInt(hubId)
+  );
+  return hub ? hub.location_Name : hubId;
+}
+
 export function prepareBookingData(formData, hubs = [], vehicles = [], addons = [], returnHubs = []) {
-  
   const pickupLocation = createLocationObject(
     formData.pickupLocationType,
     formData.pickupAirport, // This will now be the airport code
@@ -59,42 +90,23 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
       )
     : pickupLocation;
 
-  // Find hub by ID - handle both string and number types
-  const selectedHub = hubs.find(hub => {
-    return hub.location_Id === formData.selectedHub || 
-           hub.location_Id === parseInt(formData.selectedHub);
-  });
-  const hubId = selectedHub ? selectedHub.location_Id : formData.selectedHub;
+  // Store hub name instead of ID
+  const selectedHubName = formData.selectedHub;
 
-  // Find return hub by ID - handle both string and number types
-  // If return location is not enabled, return hub is same as pickup hub
-  let returnHubId;
+  // Store return hub name instead of ID
+  let selectedReturnHubName;
   if (formData.returnLocationEnabled) {
-    const selectedReturnHub = returnHubs.find(hub => {
-      return hub.location_Id === formData.selectedReturnHub || 
-             hub.location_Id === parseInt(formData.selectedReturnHub);
-    });
-    returnHubId = selectedReturnHub ? selectedReturnHub.location_Id : formData.selectedReturnHub;
+    selectedReturnHubName = formData.selectedReturnHub;
   } else {
     // When return location is not enabled, return hub is same as pickup hub
-    returnHubId = hubId;
+    selectedReturnHubName = selectedHubName;
   }
 
-  // Find vehicle by ID - handle both string and number types
-  const selectedVehicle = vehicles.find(vehicle => 
-    vehicle.vehicleId === formData.selectedVehicleId || 
-    vehicle.vehicleId === parseInt(formData.selectedVehicleId)
-  );
-  const vehicleId = selectedVehicle ? selectedVehicle.vehicleId : formData.selectedVehicleId;
+  // Store vehicle ID instead of name
+  const selectedVehicleId = formData.selectedVehicleId;
 
-  // Find addon IDs - handle both string and number types
-  const selectedAddonIds = formData.selectedAddons.map(addonId => {
-    const addon = addons.find(addon => 
-      addon.addOnId === addonId || 
-      addon.addOnId === parseInt(addonId)
-    );
-    return addon ? addon.addOnId : addonId;
-  });
+  // Store addon IDs instead of names
+  const selectedAddonIds = formData.selectedAddons;
 
   // Format dates to match backend expectation (yyyy-MM-dd'T'HH:mm)
   const formatDateForBackend = (dateString) => {
@@ -113,12 +125,12 @@ export function prepareBookingData(formData, hubs = [], vehicles = [], addons = 
     returnDate: formatDateForBackend(formData.returnDate),
     pickupLocation,
     returnLocation,
-    selectedHub: hubId,
-    selectedReturnHub: returnHubId,
-    selectedVehicle: vehicleId,
-    selectedAddons: selectedAddonIds,
+    selectedHub: selectedHubName, // Store name instead of ID
+    selectedReturnHub: selectedReturnHubName, // Store name instead of ID
+    selectedVehicle: selectedVehicleId, // Store ID instead of name
+    selectedAddons: selectedAddonIds, // Store IDs instead of names
   };
-} 
+}
 
 export function transformLocationApiResponseToHubs(apiResponse) {
   if (!apiResponse || !Array.isArray(apiResponse.locationNames)) return [];

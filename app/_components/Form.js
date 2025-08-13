@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function UserForm({ onClearBooking, userData = null }) {
+export default function UserForm({ onClearBooking }) {
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', address1: '', address2: '', email: '',
     city: '', zip: '', homePhone: '', cell: '', drivingLicense: '',
@@ -12,48 +12,6 @@ export default function UserForm({ onClearBooking, userData = null }) {
     CreditCardType: '', CreditCardNo: ''
   });
   const router = useRouter();
-
-  // Pre-fill form with user data when component mounts or userData changes
-  useEffect(() => {
-    if (userData) {
-      // Helper to format date string to YYYY-MM-DD
-      const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        // Handles both 'YYYY-MM-DD' and ISO strings
-        const d = new Date(dateStr);
-        if (isNaN(d)) return '';
-        return d.toISOString().slice(0, 10);
-      };
-      setFormData(prev => ({
-        ...prev,
-        firstName: userData.firstName || userData.first_name || '',
-        lastName: userData.lastName || userData.last_name || '',
-        email: userData.email || '',
-        cell: userData.mobileNumber?.toString() || userData.phone || userData.cell || userData.mobile || '',
-        homePhone: userData.homePhone || userData.home_phone || '',
-        address1: userData.address || userData.address1 || userData.street_address || '',
-        address2: userData.address2 || userData.apt_suite || '',
-        city: userData.city || '',
-        zip: userData.zipCode?.toString() || userData.zip || userData.postal_code || '',
-        birthDate: formatDate(userData.dob || userData.birthDate || userData.date_of_birth),
-        // Driving license info
-        drivingLicense: userData.drivingLicenseId || userData.drivingLicense || userData.license_number || '',
-        dlIssuedBy: userData.drivingLicenseIssuedBy || userData.dlIssuedBy || userData.license_issued_by || '',
-        dlValidThru: formatDate(userData.drivingLicenseValidThru || userData.dlValidThru || userData.license_expiry),
-        // International driving permit
-        idpNo: userData.idp || userData.idpNo || userData.idp_number || '',
-        idpIssuedBy: userData.idpIssuedBy || userData.idp_issued_by || '',
-        idpValidThru: formatDate(userData.idpValidThru || userData.idp_validThru || userData.idp_expiry),
-        // Passport info
-        passportNo: userData.passportNo || userData.passport_number || '',
-        passportIssuedBy: userData.passportIssuedBy || userData.passport_issued_by || '',
-        passportValid: formatDate(userData.passportValidate || userData.passportValid || userData.passport_expiry),
-        // Payment info
-        CreditCardType: userData.creditCardType || userData.CreditCardType || userData.credit_card_type || '',
-        CreditCardNo: userData.creditCardNo || userData.CreditCardNo || userData.credit_card_number || ''
-      }));
-    }
-  }, [userData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -113,12 +71,6 @@ export default function UserForm({ onClearBooking, userData = null }) {
                   Car Rental Application
                 </h1>
                 <p className="text-muted mb-0">Please fill in all required information</p>
-                {userData && (
-                  <div className="alert alert-success mt-3 border-0 rounded-3">
-                    <i className="fas fa-check-circle me-2"></i>
-                    User data pre-filled from your profile
-                  </div>
-                )}
               </div>
 
               <form onSubmit={handleSubmit}>

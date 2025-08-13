@@ -21,6 +21,7 @@ import { useFilteredCities } from '../hooks/useFilteredCities';
 import { fetchCities, fetchAirports, fetchHubs, fetchVehicles, fetchAddons } from "../api/api";
 import { transformAirportsToOptions, transformCitiesToStateOptions } from '../_components/utils/dataTransform';
 
+
 export default function ModifyBookingPage() {
   const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
@@ -36,6 +37,11 @@ export default function ModifyBookingPage() {
   const [hubs, setHubs] = useState([]);
   const [loadingHubs, setLoadingHubs] = useState(false);
   const [hubError, setHubError] = useState('');
+  
+  // State for return hub selection
+  const [returnHubs, setReturnHubs] = useState([]);
+  const [loadingReturnHubs, setLoadingReturnHubs] = useState(false);
+  const [returnHubError, setReturnHubError] = useState('');
   
   // Memoized derived data
   const airportOptions = useMemo(() => 
@@ -62,7 +68,10 @@ export default function ModifyBookingPage() {
     returnAirport: '',
     returnState: '',
     returnCity: '',
-    selectedHub: '',
+    selectedHub: '', // Hub name will be stored here
+    selectedHubId: '', // Hub ID for reference
+    selectedReturnHub: '', // Return hub name
+    selectedReturnHubId: '', // Return hub ID for reference
     selectedVehicleId: '',
     selectedAddons: [],
     
@@ -78,19 +87,6 @@ export default function ModifyBookingPage() {
     city: '',
     state: '',
     zip: '',
-    creditCardType: '',
-    creditCardNumber: '',
-    drivingLicenseNumber: '',
-    drivingLicenseAuthority: '',
-    drivingLicenseExpiry: '',
-    internationalDrivingPermitNumber: '',
-    internationalDrivingPermitAuthority: '',
-    internationalDrivingPermitExpiry: '',
-    passportNumber: '',
-    passportIssuingCountry: '',
-    passportExpiry: '',
-    
-    // Additional fields that might be in userDetails
     CreditCardType: '',
     CreditCardNo: '',
     drivingLicense: '',
@@ -132,12 +128,41 @@ export default function ModifyBookingPage() {
     }
   }, [formData.pickupLocationType, formData.pickupAirport, formData.pickupCity, formData.pickupState]);
 
+  // Fetch return hubs when return location changes
+  useEffect(() => {
+    if (formData.returnLocationEnabled && formData.returnLocationType && 
+        ((formData.returnLocationType === 'airport' && formData.returnAirport) || 
+         (formData.returnLocationType === 'city' && formData.returnCity))) {
+      setLoadingReturnHubs(true);
+      setReturnHubError('');
+      
+      const type = formData.returnLocationType === 'airport' ? 'airport' : 'city';
+      const value = type === 'airport' ? formData.returnAirport : formData.returnCity;
+      
+      fetchHubs(type, value)
+        .then((data) => {
+          setReturnHubs(data);
+          setLoadingReturnHubs(false);
+        })
+        .catch((error) => {
+          console.error('Error fetching return hubs:', error);
+          setReturnHubError('Unable to fetch return hubs. Please try again.');
+          setLoadingReturnHubs(false);
+        });
+    } else {
+      setReturnHubs([]);
+      setLoadingReturnHubs(false);
+      setReturnHubError('');
+    }
+  }, [formData.returnLocationEnabled, formData.returnLocationType, formData.returnAirport, formData.returnCity, formData.returnState]);
+
   const [errors, setErrors] = useState({});
+
+
 
   useEffect(() => {
     // Load existing booking data
     const existingBookingData = sessionStorage.getItem('bookingData');
-    
     if (existingBookingData) {
       try {
         const parsed = JSON.parse(existingBookingData);
@@ -175,16 +200,24 @@ export default function ModifyBookingPage() {
         
         // Other selections
         if (parsed.selectedHub) newFormData.selectedHub = String(parsed.selectedHub);
+        if (parsed.selectedHubId) newFormData.selectedHubId = String(parsed.selectedHubId);
         if (parsed.selectedReturnHub) newFormData.selectedReturnHub = String(parsed.selectedReturnHub);
+        if (parsed.selectedReturnHubId) newFormData.selectedReturnHubId = String(parsed.selectedReturnHubId);
         if (parsed.selectedVehicle) newFormData.selectedVehicleId = String(parsed.selectedVehicle);
         if (parsed.selectedAddons) newFormData.selectedAddons = Array.isArray(parsed.selectedAddons) ? parsed.selectedAddons.map(String) : [];
         
-        // User details
+        // User details - only load fields that are actually used in the form
         if (parsed.userDetails) {
-          Object.keys(parsed.userDetails).forEach(key => {
-            if (parsed.userDetails[key] !== undefined && parsed.userDetails[key] !== null) {
-              // Ensure all values are converted to strings to prevent controlled/uncontrolled input errors
-              newFormData[key] = String(parsed.userDetails[key]);
+          const formFields = [
+            'firstName', 'lastName', 'address1', 'address2', 'email', 'city', 'zip', 
+            'homePhone', 'cell', 'birthDate', 'drivingLicense', 'dlIssuedBy', 'dlValidThru',
+            'idpNo', 'idpIssuedBy', 'idpValidThru', 'passportNo', 'passportIssuedBy', 
+            'passportValid', 'CreditCardType', 'CreditCardNo'
+          ];
+          
+          formFields.forEach(field => {
+            if (parsed.userDetails[field] !== undefined && parsed.userDetails[field] !== null) {
+              newFormData[field] = String(parsed.userDetails[field]);
             }
           });
         }
@@ -207,7 +240,7 @@ export default function ModifyBookingPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Basic validation
@@ -224,104 +257,128 @@ export default function ModifyBookingPage() {
       return;
     }
 
-    // Helper function to format dates for backend (yyyy-MM-dd'T'HH:mm:ss)
-    const formatDateForBackend = (dateString) => {
-      if (!dateString) return null;
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return null;
-      
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    };
-
-    // Prepare updated booking data
-    const updatedBookingData = {
-      pickupDate: formatDateForBackend(formData.pickupDate),
-      returnDate: formatDateForBackend(formData.returnDate),
-      pickupLocation: {
-        type: formData.pickupLocationType,
-        value: formData.pickupLocationType === 'airport' ? formData.pickupAirport : null,
-        state: formData.pickupLocationType === 'city' ? formData.pickupState : null,
-        city: formData.pickupLocationType === 'city' ? formData.pickupCity : null
-      },
-      returnLocation: formData.returnLocationEnabled ? {
-        type: formData.returnLocationType,
-        value: formData.returnLocationType === 'airport' ? formData.returnAirport : null,
-        state: formData.returnLocationType === 'city' ? formData.returnState : null,
-        city: formData.returnLocationType === 'city' ? formData.returnCity : null
-      } : null,
-      selectedHub: formData.selectedHub ? parseInt(formData.selectedHub) : null,
-      selectedReturnHub: formData.selectedReturnHub ? parseInt(formData.selectedReturnHub) : null,
-      selectedVehicle: formData.selectedVehicleId ? parseInt(formData.selectedVehicleId) : null,
-       selectedAddons: formData.selectedAddons.map(id => parseInt(id)).filter(id => !isNaN(id)),
-      userDetails: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        address1: formData.address1,
-        address2: formData.address2,
-        email: formData.email,
-        city: formData.city,
-        zip: formData.zip,
-        homePhone: formData.homePhone,
-        cell: formData.cell,
-        drivingLicense: formData.drivingLicense,
-        dlIssuedBy: formData.dlIssuedBy,
-        dlValidThru: formData.dlValidThru,
-        idpNo: formData.idpNo,
-        idpIssuedBy: formData.idpIssuedBy,
-        idpValidThru: formData.idpValidThru,
-        passportNo: formData.passportNo,
-        passportIssuedBy: formData.passportIssuedBy,
-        passportValid: formData.passportValid,
-        birthDate: formData.birthDate,
-        CreditCardType: formData.CreditCardType,
-        CreditCardNo: formData.CreditCardNo
-      },
-      // Preserve confirmation status if it exists
-      confirmed: bookingData?.confirmed || false,
-      confirmedAt: bookingData?.confirmedAt || null,
-      submittedAt: new Date().toISOString()
-    };
-
-    // Save updated booking data to sessionStorage first
-    // Clear existing booking data and save the updated data
-    sessionStorage.removeItem('bookingData');
-    sessionStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
-    
-    // Dispatch custom event to notify other components
-    window.dispatchEvent(new Event('bookingDataChanged'));
-    
-    // Try to send to API (optional - for immediate backend update)
     try {
+      // Get existing booking data from sessionStorage
+      const existingBookingData = sessionStorage.getItem('bookingData');
+      let currentBookingData = {};
       
-      const res = await fetch('http://localhost:8081/api/booking-details/create-booking', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updatedBookingData)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        
-        // If booking is confirmed, we can optionally remove from sessionStorage
-        if (data?.confirmed) {
-          sessionStorage.removeItem('bookingData');
-          window.dispatchEvent(new Event('bookingDataChanged'));
+      if (existingBookingData) {
+        try {
+          currentBookingData = JSON.parse(existingBookingData);
+        } catch (parseError) {
+          console.error('Error parsing existing booking data:', parseError);
+          currentBookingData = {};
         }
       }
+
+      // Prepare updated booking data - merge with existing data to preserve all fields
+      const updatedBookingData = {
+        ...currentBookingData, // Keep existing data
+        
+        // Update booking details from form
+        pickupDate: formData.pickupDate,
+        returnDate: formData.returnDate,
+        pickupLocationType: formData.pickupLocationType,
+        pickupAirport: formData.pickupAirport,
+        pickupState: formData.pickupState,
+        pickupCity: formData.pickupCity,
+        returnLocationEnabled: formData.returnLocationEnabled,
+        returnLocationType: formData.returnLocationType,
+        returnAirport: formData.returnAirport,
+        returnState: formData.returnState,
+        returnCity: formData.returnCity,
+        selectedHub: formData.selectedHub, // Hub name
+        selectedHubId: formData.selectedHubId, // Hub ID for reference
+        selectedReturnHub: formData.selectedReturnHub, // Return hub name
+        selectedReturnHubId: formData.selectedReturnHubId, // Return hub ID for reference
+        selectedVehicleId: formData.selectedVehicleId,
+        selectedAddons: formData.selectedAddons,
+        
+        // Structured location data for compatibility with other components
+        pickupLocation: {
+          type: formData.pickupLocationType,
+          value: formData.pickupLocationType === 'airport' ? formData.pickupAirport : null,
+          state: formData.pickupLocationType === 'city' ? formData.pickupState : null,
+          city: formData.pickupLocationType === 'city' ? formData.pickupCity : null
+        },
+        returnLocation: formData.returnLocationEnabled ? {
+          type: formData.returnLocationType,
+          value: formData.returnLocationType === 'airport' ? formData.returnAirport : null,
+          state: formData.returnLocationType === 'city' ? formData.returnState : null,
+          city: formData.returnLocationType === 'city' ? formData.returnCity : null
+        } : null,
+        
+        // Alternative field names for backwards compatibility
+        selectedVehicle: formData.selectedVehicleId,
+        
+        // Update user details
+        userDetails: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address1: formData.address1,
+          address2: formData.address2,
+          email: formData.email,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          homePhone: formData.homePhone,
+          cell: formData.cell,
+          birthDate: formData.birthDate,
+          
+          // License information - only update old fields
+          drivingLicense: formData.drivingLicense,
+          dlIssuedBy: formData.dlIssuedBy,
+          dlValidThru: formData.dlValidThru,
+          
+          // International driving permit - only update old fields
+          idpNo: formData.idpNo,
+          idpIssuedBy: formData.idpIssuedBy,
+          idpValidThru: formData.idpValidThru,
+          
+          // Passport information - only update old fields
+          passportNo: formData.passportNo,
+          passportIssuedBy: formData.passportIssuedBy,
+          passportValid: formData.passportValid,
+          
+          // Credit card information - only update old fields
+          CreditCardType: formData.CreditCardType,
+          CreditCardNo: formData.CreditCardNo
+        },
+        
+        // Preserve existing confirmation status if it exists
+        confirmed: currentBookingData.confirmed || false,
+        confirmedAt: currentBookingData.confirmedAt || null,
+        
+        // Update metadata
+        lastModified: new Date().toISOString(),
+        modifiedFrom: 'modify-booking-page',
+        submittedAt: currentBookingData.submittedAt || new Date().toISOString()
+      };
+
+      // Save updated booking data to sessionStorage
+      sessionStorage.setItem('bookingData', JSON.stringify(updatedBookingData));
+      
+      // Dispatch custom event to notify other components about the update
+      window.dispatchEvent(new CustomEvent('bookingDataChanged', {
+        detail: {
+          action: 'modified',
+          data: updatedBookingData,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      console.log('Booking data updated in sessionStorage:', updatedBookingData);
+      
+      // Show success message
+      alert('Booking updated successfully! Your changes have been saved to local storage.');
+      
+      // Redirect to booking summary to see the updates
+      router.push('/booking-summary');
+      
     } catch (error) {
-      // Don't show error to user since data is saved locally
+      console.error('Error updating booking data in sessionStorage:', error);
+      alert('An error occurred while saving your booking changes. Please try again.');
     }
-    
-    alert('Booking updated successfully!');
-    router.push('/booking-summary');
   };
 
   const handleCancel = () => {
@@ -391,6 +448,8 @@ export default function ModifyBookingPage() {
               </h1>
               <p className="text-muted mb-0">Update your car rental booking details</p>
             </div>
+
+
 
             <div className="card shadow-lg border-0 rounded-4">
               <div className="card-body p-5">
@@ -521,15 +580,18 @@ export default function ModifyBookingPage() {
 
                                 return (
                                   <div key={hubId || `hub-${Math.random()}`} className="col-md-6">
-                                    <div className={`card ${formData.selectedHub === String(hubId) ? 'border-primary bg-primary bg-opacity-10' : 'border-light'}`}>
+                                    <div className={`card ${formData.selectedHub === hubName ? 'border-primary bg-primary bg-opacity-10' : 'border-light'}`}>
                                       <div className="card-body p-3">
                                         <div className="form-check">
                                           <input
                                             type="radio"
                                             name="hub"
-                                            value={hubId}
-                                            checked={formData.selectedHub === String(hubId)}
-                                            onChange={() => setFormData(prev => ({ ...prev, selectedHub: String(hubId) }))}
+                                            value={hubName}
+                                            checked={formData.selectedHub === hubName}
+                                            onChange={() => setFormData(prev => ({ 
+                                              ...prev, 
+                                              selectedHub: hubName
+                                            }))}
                                             className="form-check-input"
                                           />
                                           <label className="form-check-label">
@@ -553,6 +615,68 @@ export default function ModifyBookingPage() {
                             </div>
                           )}
                         </div>
+
+                        {/* Return Hub Selection */}
+                        {formData.returnLocationEnabled && (
+                          <div className="col-md-6">
+                            <label className="form-label fw-semibold">Return Hub</label>
+                            {loadingReturnHubs ? (
+                              <div className="d-flex align-items-center justify-content-center p-3">
+                                <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <span className="text-muted">Loading return hubs...</span>
+                              </div>
+                            ) : returnHubError ? (
+                              <div className="alert alert-danger py-2">{returnHubError}</div>
+                            ) : returnHubs.length > 0 ? (
+                              <div className="row g-2">
+                                {returnHubs.map((hub) => {
+                                  // Handle the nested hub structure from the API
+                                  const hubId = hub.location_Id;
+                                  const hubName = hub.location || hub.location_Name || hub.name;
+                                  const hubAddress = hub.address || hub.street_Address;
+                                  const hubCity = hub.city;
+                                  const hubState = hub.state;
+                                  const hubZipCode = hub.zipCode || hub.zip_Code;
+                                  const hubPhone = hub.phone || hub.phone_Number;
+
+                                  return (
+                                    <div key={`return-${hubId}` || `return-hub-${Math.random()}`} className="col-md-6">
+                                      <div className={`card ${formData.selectedReturnHub === hubName ? 'border-success bg-success bg-opacity-10' : 'border-light'}`}>
+                                        <div className="card-body p-3">
+                                          <div className="form-check">
+                                            <input
+                                              type="radio"
+                                              name="returnHub"
+                                              value={hubName}
+                                              checked={formData.selectedReturnHub === hubName}
+                                              onChange={() => setFormData(prev => ({ 
+                                                ...prev, 
+                                                selectedReturnHub: hubName
+                                              }))}
+                                              className="form-check-input"
+                                            />
+                                            <label className="form-check-label">
+                                              <strong>{hubName}</strong>
+                                              {hubAddress && <div className="small text-muted">{hubAddress}</div>}
+                                              {hubCity && hubState && <div className="small text-muted">{hubCity}, {hubState}</div>}
+                                              {hubZipCode && <div className="small text-muted">{hubZipCode}</div>}
+                                              {hubPhone && <div className="small text-primary">{hubPhone}</div>}
+                                            </label>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="text-center text-muted py-3">
+                                <i className="bi bi-info-circle me-2"></i>
+                                No return hubs available for the selected location.
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         <div className="col-md-6">
                           <label className="form-label fw-semibold">Select Vehicle</label>

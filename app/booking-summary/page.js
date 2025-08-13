@@ -3,12 +3,16 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '../context/AuthContext';
+import { getVehicleNameById, getAddonNamesByIds, getHubNameById } from '../_components/utils/dataTransform';
 
 export default function BookingSummaryPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useContext(AuthContext);
   const [bookingData, setBookingData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [vehicles, setVehicles] = useState([]);
+  const [addons, setAddons] = useState([]);
+  const [hubs, setHubs] = useState([]);
 
   useEffect(() => {
     // Check if booking data exists in sessionStorage
@@ -28,6 +32,16 @@ export default function BookingSummaryPage() {
         router.push('/');
         return;
       }
+      
+      // Get vehicle and addon data from sessionStorage or API
+      // For now, we'll use empty arrays - in a real app, you'd fetch these
+      const vehiclesData = JSON.parse(sessionStorage.getItem('vehicles') || '[]');
+      const addonsData = JSON.parse(sessionStorage.getItem('addons') || '[]');
+      const hubsData = JSON.parse(sessionStorage.getItem('hubs') || '[]');
+      
+      setVehicles(vehiclesData);
+      setAddons(addonsData);
+      setHubs(hubsData);
       
       setBookingData(parsedData);
       setIsLoading(false);
@@ -52,97 +66,49 @@ export default function BookingSummaryPage() {
         .find(row => row.startsWith('auth_token='))
         ?.split('=')[1];
 
-      // Helper function to format dates for backend (yyyy-MM-dd'T'HH:mm:ss)
-      const formatDateForBackend = (dateString) => {
-        if (!dateString) return null;
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return null;
-        
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-      };
-
-      // Helper function to ensure we have vehicle ID
-      const getVehicleId = (vehicleData) => {
-        if (!vehicleData) return null;
-        // If it's already a number, return it
-        if (typeof vehicleData === 'number') return vehicleData;
-        // If it's a string that can be converted to number, return the number
-        if (typeof vehicleData === 'string' && !isNaN(parseInt(vehicleData))) {
-          return parseInt(vehicleData);
-        }
-        // If it's an object with vehicleId, return that
-        if (typeof vehicleData === 'object' && vehicleData.vehicleId) {
-          return parseInt(vehicleData.vehicleId);
-        }
-        // If it's an object with id, return that
-        if (typeof vehicleData === 'object' && vehicleData.id) {
-          return parseInt(vehicleData.id);
-        }
-        // Otherwise, return null
-        return null;
-      };
-
-      // Helper function to ensure we have hub ID
-      const getHubId = (hubData) => {
-        if (!hubData) return null;
-        // If it's already a number, return it
-        if (typeof hubData === 'number') return hubData;
-        // If it's a string that can be converted to number, return the number
-        if (typeof hubData === 'string' && !isNaN(parseInt(hubData))) {
-          return parseInt(hubData);
-        }
-        // If it's an object with location_Id, return that
-        if (typeof hubData === 'object' && hubData.location_Id) {
-          return parseInt(hubData.location_Id);
-        }
-        // If it's an object with id, return that
-        if (typeof hubData === 'object' && hubData.id) {
-          return parseInt(hubData.id);
-        }
-        // Otherwise, return null
-        return null;
-      };
+    
 
       // Prepare the booking data for the backend
       const bookingDataToSend = {
-        pickupDate: formatDateForBackend(bookingData.pickupDate),
-        returnDate: formatDateForBackend(bookingData.returnDate),
+        pickupDate: bookingData.pickupDate,
+        returnDate: bookingData.returnDate,
         pickupLocation: bookingData.pickupLocation,
         returnLocation: bookingData.returnLocation,
-        selectedHub: getHubId(bookingData.selectedHub),
-        selectedReturnHub: getHubId(bookingData.selectedReturnHub),
-        selectedVehicle: getVehicleId(bookingData.selectedVehicle),
-        selectedAddons: Array.isArray(bookingData.selectedAddons) 
-          ? bookingData.selectedAddons.map(id => parseInt(id)).filter(id => !isNaN(id))
-          : [],
+        selectedHub: bookingData.selectedHub,
+        selectedReturnHub: bookingData.selectedReturnHub,
+        selectedVehicle: bookingData.selectedVehicle,
+        selectedAddons: bookingData.selectedAddons || [],
         userDetails: bookingData.userDetails,
         submittedAt: new Date().toISOString()
       };
 
-      console.log('Sending booking data:', JSON.stringify(bookingDataToSend, null, 2));
       
-      // Use the correct API endpoint
-      const apiUrl = 'http://192.168.1.28:8080/api/bookings';
-      
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      
+
+      console.log('Sending booking data:', bookingDataToSend);
+      let response;
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+        response = await fetch('http://localhost:8084/api/bookings/', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingDataToSend)
+        });
       
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(bookingDataToSend)
-      });
+      }
+      else{
+      response = await fetch('http://localhost:8084/api/bookings/new', {
+          method: 'POST',
+          headers: {
+  
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingDataToSend)
+        });
+      }
+      // Send booking data to backend API
+     
 
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
@@ -203,6 +169,11 @@ export default function BookingSummaryPage() {
     return null; // Will redirect to home page
   }
 
+  // Get display names using utility functions
+  const vehicleName = getVehicleNameById(bookingData.selectedVehicle, vehicles);
+  const addonNames = getAddonNamesByIds(bookingData.selectedAddons, addons);
+  const hubName = bookingData.selectedHub || 'N/A'; // Use hub name directly
+
   return (
     <div className="min-vh-100 bg-light py-5">
       <div className="container">
@@ -236,7 +207,7 @@ export default function BookingSummaryPage() {
                           ? (bookingData.pickupLocation.value || bookingData.pickupLocation.city || 'N/A')
                           : (bookingData.pickupLocation || 'N/A')
                       }</p>
-                      <p className="mb-0"><strong>Hub:</strong> {bookingData.selectedHub || 'N/A'}</p>
+                      <p className="mb-0"><strong>Hub:</strong> {hubName}</p>
                     </div>
                   </div>
                   <div className="col-md-6 mb-3">
@@ -256,16 +227,16 @@ export default function BookingSummaryPage() {
                   <div className="col-md-6 mb-3">
                     <h5 className="fw-bold text-dark mb-2">Vehicle Details</h5>
                     <div className="bg-light p-3 rounded">
-                      <p className="mb-0"><strong>Selected Vehicle:</strong> {bookingData.selectedVehicle || 'N/A'}</p>
+                      <p className="mb-0"><strong>Selected Vehicle:</strong> {vehicleName}</p>
                     </div>
                   </div>
                   <div className="col-md-6 mb-3">
                     <h5 className="fw-bold text-dark mb-2">Add-ons</h5>
                     <div className="bg-light p-3 rounded">
-                      {bookingData.selectedAddons && bookingData.selectedAddons.length > 0 ? (
+                      {addonNames && addonNames.length > 0 ? (
                         <ul className="list-unstyled mb-0">
-                          {bookingData.selectedAddons.map((addon, index) => (
-                            <li key={index} className="mb-1">• {typeof addon === 'object' ? (addon.name || addon.addOnName || 'Unknown Add-on') : addon}</li>
+                          {addonNames.map((addonName, index) => (
+                            <li key={index} className="mb-1">• {addonName}</li>
                           ))}
                         </ul>
                       ) : (
@@ -285,12 +256,12 @@ export default function BookingSummaryPage() {
                           <div className="col-md-6">
                             <p className="mb-1"><strong>Name:</strong> {bookingData.userDetails.firstName} {bookingData.userDetails.lastName}</p>
                             <p className="mb-1"><strong>Email:</strong> {bookingData.userDetails.email}</p>
-                            <p className="mb-1"><strong>Phone:</strong> {bookingData.userDetails.phone}</p>
+                            <p className="mb-1"><strong>Phone:</strong> {bookingData.userDetails.cell || bookingData.userDetails.phone || 'N/A'}</p>
                           </div>
                           <div className="col-md-6">
-                            <p className="mb-1"><strong>Address:</strong> {bookingData.userDetails.address}</p>
-                            <p className="mb-1"><strong>City:</strong> {bookingData.userDetails.city}</p>
-                            <p className="mb-0"><strong>State:</strong> {bookingData.userDetails.state}</p>
+                            <p className="mb-1"><strong>Address:</strong> {bookingData.userDetails.address1 || bookingData.userDetails.address || 'N/A'}</p>
+                              <p className="mb-1"><strong>City:</strong> {bookingData.userDetails.city || 'N/A'}</p>
+                              <p className="mb-0"><strong>ZIP:</strong> {bookingData.userDetails.zip || 'N/A'}</p>
                           </div>
                         </div>
                       </div>

@@ -94,11 +94,11 @@ export default function Step2HubSelection({
                                 <div key={hubId || `hub-${Math.random()}`} className="col-12 col-sm-6 col-md-4 col-lg-3">
                                 <div
                                   className={`card h-100 cursor-pointer transition-all ${
-                                    selectedHub === String(hubId)
+                                    selectedHub === hubName
                                       ? "border-primary bg-primary bg-opacity-10 shadow"
                                       : "border-secondary hover:border-primary"
                                   }`}
-                                  onClick={() => onHubSelect(String(hubId))}
+                                  onClick={() => onHubSelect(hubName)}
                                 >
                                   <div className="card-body">
                                     <div className="row">
@@ -106,8 +106,8 @@ export default function Step2HubSelection({
                                         <input
                                           type="radio"
                                           name="hub"
-                                          value={hubId}
-                                          checked={selectedHub === String(hubId)}
+                                          value={hubName}
+                                          checked={selectedHub === hubName}
                                           onChange={(e) => onHubSelect(e.target.value)}
                                           className="form-check-input mt-1"
                                         />
@@ -170,11 +170,11 @@ export default function Step2HubSelection({
                                       <div key={hubId || `return-hub-${Math.random()}`} className="col-12 col-sm-6 col-md-4 col-lg-3">
                                         <div
                                           className={`card h-100 cursor-pointer transition-all ${
-                                            selectedReturnHub === String(hubId)
+                                            selectedReturnHub === hubName
                                               ? "border-primary bg-primary bg-opacity-10 shadow"
                                               : "border-secondary hover:border-primary"
                                           }`}
-                                          onClick={() => onReturnHubSelect(String(hubId))}
+                                          onClick={() => onReturnHubSelect(hubName)}
                                         >
                                           <div className="card-body">
                                             <div className="row">
@@ -182,8 +182,8 @@ export default function Step2HubSelection({
                                                 <input
                                                   type="radio"
                                                   name="returnHub"
-                                                  value={hubId}
-                                                  checked={selectedReturnHub === String(hubId)}
+                                                  value={hubName}
+                                                  checked={selectedReturnHub === hubName}
                                                   onChange={(e) => onReturnHubSelect(e.target.value)}
                                                   className="form-check-input mt-1"
                                                 />

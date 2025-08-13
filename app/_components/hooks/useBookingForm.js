@@ -252,6 +252,11 @@ export function useBookingForm(vehicles = [], addons = []) {
     sessionStorage.removeItem("bookingData");
     sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
 
+    // Store vehicles, addons, and hubs data for later retrieval
+    sessionStorage.setItem("vehicles", JSON.stringify(vehicles));
+    sessionStorage.setItem("addons", JSON.stringify(addons));
+    sessionStorage.setItem("hubs", JSON.stringify([...hubs, ...returnHubs]));
+
     // Dispatch custom event to notify ConditionalForm component
     window.dispatchEvent(new Event('bookingDataChanged'));
 
@@ -263,7 +268,7 @@ export function useBookingForm(vehicles = [], addons = []) {
        },
      });
      window.location.href = "/UserDetails";
-  }, [formData, pickupDate, returnDate, hubs, vehicles, addons]);
+  }, [formData, pickupDate, returnDate, hubs, vehicles, addons, returnHubs]);
 
   // Fetch hubs when step changes
   useEffect(() => {
@@ -285,12 +290,10 @@ export function useBookingForm(vehicles = [], addons = []) {
           setHubs(data);
           setLoadingHubs(false);
           
-          // If we're editing and have a selected hub name, find the corresponding ID
+          // If we're editing and have a selected hub name, use it directly
           if (isEditing && selectedHub && data.length > 0) {
-            const hub = data.find(h => h.location_Name === selectedHub);
-            if (hub) {
-              setSelectedHub(hub.location_Id.toString());
-            }
+            // selectedHub is already the name, no need to convert
+            setSelectedHub(selectedHub);
           }
         })
         .catch(() => {
@@ -316,12 +319,10 @@ export function useBookingForm(vehicles = [], addons = []) {
             setReturnHubs(data);
             setLoadingReturnHubs(false);
             
-            // If we're editing and have a selected return hub name, find the corresponding ID
+            // If we're editing and have a selected return hub name, use it directly
             if (isEditing && selectedReturnHub && data.length > 0) {
-              const hub = data.find(h => h.location_Name === selectedReturnHub);
-              if (hub) {
-                setSelectedReturnHub(hub.location_Id.toString());
-              }
+              // selectedReturnHub is already the name, no need to convert
+              setSelectedReturnHub(selectedReturnHub);
             }
           })
           .catch(() => {

@@ -19,6 +19,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
+import { getVehicleNameById, getAddonNamesByIds, getHubNameById } from './utils/dataTransform';
 
 export default function BookingSummary() {
   const router = useRouter();
@@ -28,6 +29,9 @@ export default function BookingSummary() {
   const [totalPages, setTotalPages] = useState(1);
   const [pageIndex, setPageIndex] = useState(0);
   const [sorting, setSorting] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [addons, setAddons] = useState([]);
+  const [hubs, setHubs] = useState([]);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -49,13 +53,24 @@ export default function BookingSummary() {
         if (bookingData) {
           try {
             const parsed = JSON.parse(bookingData);
+            
+            // Get vehicle and addon data from sessionStorage or API
+            // For now, we'll use empty arrays - in a real app, you'd fetch these
+            const vehiclesData = JSON.parse(sessionStorage.getItem('vehicles') || '[]');
+            const addonsData = JSON.parse(sessionStorage.getItem('addons') || '[]');
+            const hubsData = JSON.parse(sessionStorage.getItem('hubs') || '[]');
+            
+            setVehicles(vehiclesData);
+            setAddons(addonsData);
+            setHubs(hubsData);
+            
             // Convert to array format for table
             bookingsList = [{
               id: '1',
               pickupDate: parsed.pickupDate || 'N/A',
               returnDate: parsed.returnDate || 'N/A',
-              vehicle: parsed.selectedVehicle || 'N/A',
-              hub: parsed.selectedHub || 'N/A',
+              vehicle: getVehicleNameById(parsed.selectedVehicle, vehiclesData),
+              hub: parsed.selectedHub || 'N/A', // Use hub name directly
               confirmed: parsed.confirmed || false,
               userDetails: parsed.userDetails
             }];

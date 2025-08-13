@@ -39,7 +39,7 @@ export async function middleware(request) {
     } catch (error) {
       // Token verification failed, redirect to login page
       return NextResponse.redirect(new URL('/auth/login', request.url));
-    }     
+    }
   } else if (isAuthPath && token) {
     // If user is already logged in and tries to access login/register pages,
     // redirect them to the home page
